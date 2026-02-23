@@ -239,17 +239,31 @@ elif page == "VisitMode Prediction":
 
                 model = clf_models["RandomForest"]  # change if needed
 
-                prediction = model.predict(input_df)[0]
+                # prediction = model.predict(input_df)[0]
 
-                st.success(f"Predicted Visit Mode: {prediction}")
+                prediction_encoded = model.predict(input_df)[0]
+
+                # Convert ID → Name
+                visitmode_encoder = clf_encoders["VisitMode"]
+                prediction_name = visitmode_encoder.inverse_transform([prediction_encoded])[0]
+
+                st.success(f"Predicted Visit Mode: {prediction_name}")
+
+                # st.success(f"Predicted Visit Mode: {prediction}")
 
                 # Probabilities
                 if hasattr(model, "predict_proba"):
+
                     probs = model.predict_proba(input_df)[0]
-                    classes = model.classes_
+
+                    # Get VisitMode encoder
+                    visitmode_encoder = clf_encoders["VisitMode"]
+
+                    # Convert encoded class IDs → names
+                    class_names = visitmode_encoder.inverse_transform(model.classes_)
 
                     proba_df = pd.DataFrame({
-                        "VisitMode": classes,
+                        "VisitMode": class_names,
                         "Probability": probs
                     }).sort_values("Probability", ascending=False).head(3)
 
@@ -260,7 +274,7 @@ elif page == "VisitMode Prediction":
                         orientation="h"
                     )
 
-                    st.plotly_chart(fig, width='stretch')
+                    st.plotly_chart(fig, use_container_width=True)
 
         except Exception as e:
             # print(e)
