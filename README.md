@@ -12,6 +12,8 @@ An end-to-end machine learning project that analyzes tourism data to:
 🔗 **Streamlit Demo:**  
 👉 https://tourism-experience.streamlit.app/
 
+    Recommendation section may not work properly due to resource restriction of streamlit cloud
+
 🔗 **Exaplanation Video**
 👉 https://drive.google.com/file/d/112vzyE5_RPhgLP7Wi0J4tVbikQ8cD1Ou/view?usp=drive_link
 
