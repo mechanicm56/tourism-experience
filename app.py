@@ -1,25 +1,22 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 from pathlib import Path
-import matplotlib.pyplot as plt
 import joblib
 import plotly.express as px
 
-
 BASE_DIR = Path(__file__).resolve().parent
-
-print(BASE_DIR)
 
 # -------------------------------------------------
 # PAGE CONFIG
 # -------------------------------------------------
 st.set_page_config(
-    page_title="Travel Intelligence Platform",
+    page_title="Tourism Intelligence Platform",
     layout="wide",
     page_icon="🌍"
 )
 
-st.title("🌍 Travel Intelligence & Recommendation System")
+st.title("🌍 Tourism Intelligence Platform")
 
 # -------------------------------------------------
 # LOAD DATA
@@ -35,11 +32,6 @@ df = load_data()
 # -------------------------------------------------
 @st.cache_resource
 def load_models():
-    reg_models = {
-        "XGBoost": joblib.load(BASE_DIR / "models/reg_XGBoost.pkl"),
-        "LightGBM": joblib.load(BASE_DIR / "models/reg_LightGBM.pkl"),
-        "RandomForest": joblib.load(BASE_DIR / "models/reg_RandomForest.pkl")
-    }
 
     clf_models = {
         "XGBoost": joblib.load(BASE_DIR / "models/clf_XGBoost.pkl"),
@@ -48,190 +40,354 @@ def load_models():
         "LogisticRegression": joblib.load(BASE_DIR / "models/clf_LogisticRegression.pkl")
     }
 
-    reg_encoders = joblib.load(BASE_DIR / "models/reg_encoders.pkl")
+    reg_models = {
+        "XGBoost": joblib.load(BASE_DIR / "models/reg_XGBoost.pkl"),
+        "LightGBM": joblib.load(BASE_DIR / "models/reg_LightGBM.pkl"),
+        "RandomForest": joblib.load(BASE_DIR / "models/reg_RandomForest.pkl")
+    }
+
     clf_encoders = joblib.load(BASE_DIR / "models/clf_encoders.pkl")
+    reg_encoders = joblib.load(BASE_DIR / "models/reg_encoders.pkl")
 
-    reg_features = joblib.load(BASE_DIR / "models/reg_features.pkl")
     clf_features = joblib.load(BASE_DIR / "models/clf_features.pkl")
+    reg_features = joblib.load(BASE_DIR / "models/reg_features.pkl")
 
-    return reg_models, clf_models, reg_encoders, clf_encoders, reg_features, clf_features
+    return clf_models, reg_models, clf_encoders, reg_encoders, clf_features, reg_features
 
-reg_models, clf_models, reg_encoders, clf_encoders, reg_features, clf_features = load_models()
+clf_models, reg_models, clf_encoders, reg_encoders, clf_features, reg_features = load_models()
 
 # -------------------------------------------------
-# SIDEBAR FILTERS
+# SIDEBAR NAVIGATION
 # -------------------------------------------------
-st.sidebar.header("🔎 Filters")
+st.sidebar.title("Navigation")
 
-country_filter = st.sidebar.multiselect(
-    "Select Attraction Country",
-    df["AttractionCountry"].unique(),
-    default=df["AttractionCountry"].unique()
+page = st.sidebar.radio(
+    "",
+    [
+        "Home",
+        "Model Comparison",
+        "VisitMode Prediction",
+        "Rating Prediction",
+        "Recommendations"
+    ]
 )
 
-type_filter = st.sidebar.multiselect(
-    "Select Attraction Type",
-    df["AttractionType"].unique(),
-    default=df["AttractionType"].unique()
-)
+# =================================================
+# HOME
+# =================================================
+if page == "Home":
 
-filtered_df = df[
-    (df["AttractionCountry"].isin(country_filter)) &
-    (df["AttractionType"].isin(type_filter))
-]
-
-# -------------------------------------------------
-# TABS
-# -------------------------------------------------
-tab1, tab2, tab3, tab4 = st.tabs([
-    "📊 Analytics",
-    "🌍 Geo Map",
-    "🤖 Prediction",
-    "🎯 Recommendation"
-])
+    st.header("Welcome to the Travel Intelligence Dashboard")
+    st.write("""
+    This system predicts:
+    - 🧳 Visit Mode (Business, Family, Couples, Friends, etc.)
+    - ⭐ Attraction Rating
+    """)
 
 # =================================================
-# TAB 1 — ANALYTICS
+# MODEL COMPARISON
 # =================================================
-with tab1:
+elif page == "Model Comparison":
 
-    col1, col2, col3, col4 = st.columns(4)
-
-    col1.metric("Total Users", filtered_df["UserId"].nunique())
-    col2.metric("Total Attractions", filtered_df["Attraction"].nunique())
-    col3.metric("Avg Rating", round(filtered_df["Rating"].mean(),2))
-    col4.metric("Countries", filtered_df["AttractionCountry"].nunique())
-
-    st.subheader("Top Attractions")
-
-    top_attr = (
-        filtered_df.groupby("Attraction")["Rating"]
-        .mean()
-        .sort_values(ascending=False)
-        .head(10)
-        .reset_index()
-    )
-
-    fig = px.bar(top_attr, x="Rating", y="Attraction", orientation="h")
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.subheader("Model Comparison")
+    st.header("Model Performance Comparison")
 
     reg_comp = pd.read_csv(BASE_DIR / "models/regression_model_comparison.csv")
     clf_comp = pd.read_csv(BASE_DIR / "models/classification_model_comparison.csv")
 
-    st.write("Regression Models")
+    st.subheader("Regression Models (Rating Prediction)")
     st.dataframe(reg_comp)
 
-    st.write("Classification Models")
+    fig_reg = px.bar(reg_comp, x="Model", y="RMSE")
+    st.plotly_chart(fig_reg, use_container_width=True)
+
+    st.subheader("Classification Models (VisitMode Prediction)")
     st.dataframe(clf_comp)
 
-# =================================================
-# TAB 2 — GEO MAP
-# =================================================
-with tab2:
+    fig_clf = px.bar(clf_comp, x="Model", y="Accuracy")
+    st.plotly_chart(fig_clf, use_container_width=True)
 
-    geo_df = (
-        filtered_df.groupby("AttractionCountry")
-        .agg(AvgRating=("Rating","mean"),
-             VisitCount=("Attraction","count"))
-        .reset_index()
+# =================================================
+# VISIT MODE PREDICTION
+# =================================================
+elif page == "VisitMode Prediction":
+
+    st.header("Predict Visit Mode")
+
+    # -----------------------------
+    # Dynamic Country → Region → City
+    # -----------------------------
+
+    # country = st.selectbox("Country", sorted(df["Country"].unique()))
+
+    # st.write("Model features:", clf_features)
+    # st.write("Input features:", df.columns.tolist())
+
+    country_list = (
+        df["Country"]
+        .dropna()
+        .astype(str)
+        .unique()
     )
 
-    fig = px.choropleth(
-        geo_df,
-        locations="AttractionCountry",
-        locationmode="country names",
-        color="VisitCount",
-        hover_data=["AvgRating"],
-        color_continuous_scale="Blues"
+    country = st.selectbox("Country", sorted(country_list))
+
+    region_options = (
+        df[df["Country"] == country]["Region"]
+        .dropna()
+        .astype(str)
+        .unique()
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    region = st.selectbox("Region", sorted(region_options))
 
-# =================================================
-# TAB 3 — PREDICTION
-# =================================================
-with tab3:
 
-    prediction_type = st.selectbox(
-        "Choose Prediction Type",
-        ["Rating (Regression)", "VisitMode (Classification)"]
+    city_options = (
+        df[(df["Country"] == country) &
+        (df["Region"] == region)]["CityName"]
+        .dropna()
+        .astype(str)
+        .unique()
     )
 
-    model_choice = st.selectbox(
-        "Select Model",
-        list(reg_models.keys()) if "Rating" in prediction_type else list(clf_models.keys())
-    )
+    city = st.selectbox("City", sorted(city_options))
 
-    st.subheader("Input Features")
+    # region_options = df[df["Country"] == country]["Region"].unique()
+    # region = st.selectbox("Region", sorted(region_options))
 
-    input_data = {}
+    # city_options = df[
+    #     (df["Country"] == country) &
+    #     (df["Region"] == region)
+    # ]["CityName"].unique()
 
-    for col in reg_features if "Rating" in prediction_type else clf_features:
-        if col in df.columns:
-            input_data[col] = st.selectbox(col, df[col].unique())
+    # city = st.selectbox("City", sorted(city_options))
 
-    if st.button("Predict"):
+    st.divider()
 
-        input_df = pd.DataFrame([input_data])
+    # Attraction info
+    attraction_type = st.selectbox("Attraction Type", df["AttractionType"].unique())
+    attraction_country = st.selectbox("Attraction Country", df["AttractionCountry"].unique())
+    attraction_city = st.selectbox("Attraction City", df["AttractionCity"].unique())
 
-        if "Rating" in prediction_type:
-            for col in input_df.columns:
-                if col in reg_encoders:
-                    input_df[col] = reg_encoders[col].transform(input_df[col])
-            input_df = input_df[reg_features]
-            prediction = reg_models[model_choice].predict(input_df)[0]
-            st.success(f"Predicted Rating: {round(prediction,2)}")
+    attraction_popularity = st.slider("Attraction Popularity", 1, 10000, 100)
+    attraction_avg_rating = st.slider("Attraction Avg Rating", 1.0, 5.0, 4.0)
 
-        else:
-            for col in input_df.columns:
-                if col in clf_encoders:
-                    input_df[col] = clf_encoders[col].transform(input_df[col])
-            input_df = input_df[clf_features]
-            prediction = clf_models[model_choice].predict(input_df)[0]
-            st.success(f"Predicted Visit Mode: {prediction}")
+    visit_year = st.slider("Visit Year", 2015, 2026, 2024)
+    visit_month = st.slider("Visit Month", 1, 12, 6)
+
+    model_choice = st.selectbox("Select Model", list(clf_models.keys()))
+
+    if st.button("Predict Visit Mode"):
+
+        try:
+            with st.spinner("Analyzing travel patterns..."):
+
+                input_dict = {
+                    "Country": country,
+                    "Region": region,
+                    "CityName": city,
+                    "AttractionType": attraction_type,
+                    "VisitYear": visit_year,
+                    "VisitMonth": visit_month,
+                }
+
+                input_df = pd.DataFrame([input_dict])
+
+                # Feature engineering
+                input_df["Season"] = input_df["VisitMonth"].map({
+                    12:"Winter",1:"Winter",2:"Winter",
+                    3:"Spring",4:"Spring",5:"Spring",
+                    6:"Summer",7:"Summer",8:"Summer",
+                    9:"Autumn",10:"Autumn",11:"Autumn"
+                })
+
+                input_df["IsDomesticTrip"] = 0
+
+                # Encode safely
+                for col in input_df.columns:
+                    if col in clf_encoders:
+                        try:
+                            input_df[col] = clf_encoders[col].transform(input_df[col])
+                        except:
+                            input_df[col] = 0
+
+                # Ensure all required columns exist
+                for col in clf_features:
+                    if col not in input_df.columns:
+                        input_df[col] = 0
+
+                input_df = input_df[clf_features]
+
+                model = clf_models["RandomForest"]  # change if needed
+
+                prediction = model.predict(input_df)[0]
+
+                st.success(f"Predicted Visit Mode: {prediction}")
+
+                # Probabilities
+                if hasattr(model, "predict_proba"):
+                    probs = model.predict_proba(input_df)[0]
+                    classes = model.classes_
+
+                    proba_df = pd.DataFrame({
+                        "VisitMode": classes,
+                        "Probability": probs
+                    }).sort_values("Probability", ascending=False).head(3)
+
+                    fig = px.bar(
+                        proba_df,
+                        x="Probability",
+                        y="VisitMode",
+                        orientation="h"
+                    )
+
+                    st.plotly_chart(fig, use_container_width=True)
+
+        except Exception as e:
+            # print(e)
+            st.error(f"Prediction Error: {e}")
 
 # =================================================
-# TAB 4 — HYBRID RECOMMENDATION
+# RATING PREDICTION
 # =================================================
-with tab4:
+elif page == "Rating Prediction":
+
+    st.header("Predict Attraction Rating")
+
+    attraction_type = st.selectbox("Attraction Type", df["AttractionType"].unique())
+    attraction_country = st.selectbox("Attraction Country", df["AttractionCountry"].unique())
+    attraction_city = st.selectbox("Attraction City", df["AttractionCity"].unique())
+
+    visit_year = st.slider("Visit Year", 2015, 2026, 2024)
+    visit_month = st.slider("Visit Month", 1, 12, 6)
+
+    model_choice = st.selectbox("Select Regression Model", list(reg_models.keys()))
+
+    if st.button("Predict Rating"):
+
+        try:
+            with st.spinner("Estimating rating..."):
+
+                input_dict = {
+                    "AttractionType": attraction_type,
+                    "VisitYear": visit_year,
+                    "VisitMonth": visit_month,
+                }
+
+                input_df = pd.DataFrame([input_dict])
+
+                input_df["Season"] = input_df["VisitMonth"].map({
+                    12:"Winter",1:"Winter",2:"Winter",
+                    3:"Spring",4:"Spring",5:"Spring",
+                    6:"Summer",7:"Summer",8:"Summer",
+                    9:"Autumn",10:"Autumn",11:"Autumn"
+                })
+
+                # Encode safely
+                for col in input_df.columns:
+                    if col in reg_encoders:
+                        try:
+                            input_df[col] = reg_encoders[col].transform(input_df[col])
+                        except:
+                            input_df[col] = 0
+
+                # Ensure required columns exist
+                for col in reg_features:
+                    if col not in input_df.columns:
+                        input_df[col] = 0
+
+                input_df = input_df[reg_features]
+
+                model = reg_models["RandomForest"]
+
+                prediction = model.predict(input_df)[0]
+
+                st.success(f"Predicted Rating: {round(float(prediction),2)} / 5")
+
+        except Exception as e:
+            st.error(f"Prediction Error: {e}")
+
+# =================================================
+# RECOMMENDATION SYSTEM
+# =================================================
+elif page == "Recommendations":
+
+    st.header("Personalized Attraction Recommendations")
 
     user_id = st.selectbox("Select User", df["UserId"].unique())
 
-    user_item = df.pivot_table(
-        index="UserId",
-        columns="Attraction",
-        values="Rating"
-    ).fillna(0)
+    if st.button("Generate Recommendations"):
 
-    from sklearn.metrics.pairwise import cosine_similarity
+        with st.spinner("Finding similar travelers and ranking attractions..."):
 
-    similarity = cosine_similarity(user_item)
-    sim_df = pd.DataFrame(
-        similarity,
-        index=user_item.index,
-        columns=user_item.index
-    )
+            # User history
+            user_history = df[df["UserId"] == user_id][
+                ["Attraction", "Rating", "VisitMode"]
+            ]
 
-    similar_users = sim_df[user_id].sort_values(ascending=False)[1:6].index
-    recommendations = (
-        user_item.loc[similar_users]
-        .mean()
-        .sort_values(ascending=False)
-        .head(5)
-        .index
-    )
+            st.subheader("User Visit History")
+            st.dataframe(user_history)
 
-    st.write("Recommended Attractions:")
-    for rec in recommendations:
-        st.success(rec)
+            # User-item matrix
+            user_item = df.pivot_table(
+                index="UserId",
+                columns="Attraction",
+                values="Rating"
+            ).fillna(0)
 
-# -------------------------------------------------
-# DOWNLOAD DATA
-# -------------------------------------------------
-st.sidebar.download_button(
-    "⬇ Download Filtered Data",
-    filtered_df.to_csv(index=False),
-    "filtered_data.csv"
-)
+            from sklearn.metrics.pairwise import cosine_similarity
+
+            similarity_matrix = cosine_similarity(user_item)
+            similarity_df = pd.DataFrame(
+                similarity_matrix,
+                index=user_item.index,
+                columns=user_item.index
+            )
+
+            similar_users = (
+                similarity_df[user_id]
+                .sort_values(ascending=False)
+                .iloc[1:6]
+                .index
+            )
+
+            # Collaborative filtering
+            similar_user_ratings = user_item.loc[similar_users]
+
+            collaborative_scores = (
+                similar_user_ratings.mean()
+                .sort_values(ascending=False)
+            )
+
+            visited_attractions = user_history["Attraction"].values
+            collaborative_scores = collaborative_scores.drop(
+                visited_attractions,
+                errors="ignore"
+            )
+
+            # Popularity boost
+            popularity = df.groupby("Attraction")["UserId"].count()
+            popularity_norm = popularity / popularity.max()
+
+            hybrid_score = (
+                0.7 * collaborative_scores +
+                0.3 * popularity_norm
+            ).dropna().sort_values(ascending=False)
+
+            top_recommendations = hybrid_score.head(10)
+
+            rec_df = pd.DataFrame({
+                "Attraction": top_recommendations.index,
+                "Score": top_recommendations.values
+            })
+
+            st.subheader("Recommended Attractions")
+            st.dataframe(rec_df)
+
+            fig = px.bar(
+                rec_df,
+                x="Score",
+                y="Attraction",
+                orientation="h"
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
