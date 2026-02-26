@@ -4,6 +4,7 @@ import numpy as np
 from pathlib import Path
 import joblib
 import plotly.express as px
+import gdown
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -11,10 +12,8 @@ BASE_DIR = Path(__file__).resolve().parent
 # GOOGLE DRIVE FILE IDS
 # --------------------------------------------------
 FILE_IDS = {
-    "kmeans": "16ZJx4pug-oNdhSSYX8qO-kGxYe6FqhYn",
-    "scaler": "10vXiZQ8M_wAsIRobn_CNgyszKpxp5PvO",
-    "similarity": "1I_DRib643iuZjNJY2oP-9Q6SKLpmHyEy",
-    "products": "1KUgKzAxJIjl_0-G77yhPGl3EPqiNERA_"
+    "clf_rf": "1rKp0i2zJ7FiH4_yi18fAJd4jTc0scXSI",
+    "reg_rf": "17SSG57s0guWLJm46cQwBWxrfyJRitTUe"
 }
 
 # --------------------------------------------------
@@ -51,20 +50,20 @@ df = load_data()
 # -------------------------------------------------
 @st.cache_resource
 def load_models():
-    kmeans_path = download_from_drive(FILE_IDS["kmeans"], BASE_DIR / "kmeans_model.pkl")
-    scaler_path = download_from_drive(FILE_IDS["scaler"], BASE_DIR / "scaler.pkl")
+    clf_rf_path = download_from_drive(FILE_IDS["clf_rf"], BASE_DIR / "models/clf_RandomForest.pkl")
+    reg_rf_path = download_from_drive(FILE_IDS["reg_rf"], BASE_DIR / "scaler.pkl")
 
     clf_models = {
         "XGBoost": joblib.load(BASE_DIR / "models/clf_XGBoost.pkl"),
         "LightGBM": joblib.load(BASE_DIR / "models/clf_LightGBM.pkl"),
-        "RandomForest": joblib.load(BASE_DIR / "models/clf_RandomForest.pkl"),
+        "RandomForest": joblib.load(clf_rf_path),
         "LogisticRegression": joblib.load(BASE_DIR / "models/clf_LogisticRegression.pkl")
     }
 
     reg_models = {
         "XGBoost": joblib.load(BASE_DIR / "models/reg_XGBoost.pkl"),
         "LightGBM": joblib.load(BASE_DIR / "models/reg_LightGBM.pkl"),
-        "RandomForest": joblib.load(BASE_DIR / "models/reg_RandomForest.pkl")
+        "RandomForest": joblib.load(reg_rf_path)
     }
 
     clf_encoders = joblib.load(BASE_DIR / "models/clf_encoders.pkl")
@@ -101,8 +100,8 @@ if page == "Home":
     st.header("Welcome to the Travel Intelligence Dashboard")
     st.write("""
     This system predicts:
-    - 🧳 Visit Mode (Business, Family, Couples, Friends, etc.)
-    - ⭐ Attraction Rating
+    - Visit Mode (Business, Family, Couples, Friends, etc.)
+    - Attraction Rating
     """)
 
 # =================================================
