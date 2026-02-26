@@ -7,6 +7,11 @@ An end-to-end machine learning project that analyzes tourism data to:
 - Recommend personalized attractions
 - Visualize tourism trends
 
+## 🚀 Live Demo (Streamlit App)
+
+🔗 **Streamlit Demo:**  
+👉 https://shopper-spectrum-ecom.streamlit.app/
+
 ## Tech Stack
 - Python, Pandas, NumPy
 - Scikit-learn, XGBoost
@@ -22,17 +27,21 @@ An end-to-end machine learning project that analyzes tourism data to:
 - Business-focused insights
 
 ## How to Run
+
+- Create a virtual environment using virtualenv
+
+- Install dependencies
 ```bash
 pip install -r requirements.txt
-python src/data_preprocessing.py
-python src/feature_engineering.py
-python src/train_regression.py
-python src/train_classification.py
+```
+- Generate required files and models using tourism_analysis.ipynb file
+
+- At last, run the App
+```bash
 streamlit run app.py
 ```
 
 ## Future Enhancements
 - Register models in MLflow Model Registry
 - Load models directly from MLflow into Streamlit
-- Add versioning & staging (Production / Staging)
 - Deploy MLflow tracking to cloud (DagsHub)
