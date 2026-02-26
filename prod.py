@@ -118,13 +118,13 @@ elif page == "Model Comparison":
     st.dataframe(reg_comp)
 
     fig_reg = px.bar(reg_comp, x="Model", y="RMSE")
-    st.plotly_chart(fig_reg, use_container_width=True)
+    st.plotly_chart(fig_reg, width='stretch')
 
     st.subheader("Classification Models (VisitMode Prediction)")
     st.dataframe(clf_comp)
 
     fig_clf = px.bar(clf_comp, x="Model", y="Accuracy")
-    st.plotly_chart(fig_clf, use_container_width=True)
+    st.plotly_chart(fig_clf, width='stretch')
 
 # =================================================
 # VISIT MODE PREDICTION
@@ -260,7 +260,7 @@ elif page == "VisitMode Prediction":
                         orientation="h"
                     )
 
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
 
         except Exception as e:
             # print(e)
@@ -410,4 +410,4 @@ elif page == "Recommendations":
                 orientation="h"
             )
 
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
