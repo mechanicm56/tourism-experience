@@ -10,7 +10,7 @@ An end-to-end machine learning project that analyzes tourism data to:
 ## 🚀 Live Demo (Streamlit App)
 
 🔗 **Streamlit Demo:**  
-👉 https://shopper-spectrum-ecom.streamlit.app/
+👉 https://tourism-experience.streamlit.app/
 
 ## Tech Stack
 - Python, Pandas, NumPy
