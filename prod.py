@@ -29,12 +29,12 @@ def download_from_drive(file_id, output_path):
 # PAGE CONFIG
 # -------------------------------------------------
 st.set_page_config(
-    page_title="Tourism Intelligence Platform",
+    page_title="Tourism Experience Analytics",
     layout="wide",
     page_icon="🌍"
 )
 
-st.title("🌍 Tourism Intelligence Platform")
+st.title("🌍 Tourism Experience Analytics")
 
 # -------------------------------------------------
 # LOAD DATA
@@ -85,6 +85,7 @@ page = st.sidebar.radio(
     "",
     [
         "Home",
+        "Analytics",
         "Model Comparison",
         "VisitMode Prediction",
         "Rating Prediction",
@@ -97,11 +98,178 @@ page = st.sidebar.radio(
 # =================================================
 if page == "Home":
 
-    st.header("Welcome to the Travel Intelligence Dashboard")
+    st.header("Welcome to the Tourism Experience Analytics Dashboard")
     st.write("""
     This system predicts:
     - Visit Mode (Business, Family, Couples, Friends, etc.)
     - Attraction Rating
+    - UserId based Recommendations
+    """)
+
+# =================================================
+# ANALYTICS
+# =================================================
+elif page == "Analytics":
+
+    # st.title("📊 Tourism Analytics Dashboard")
+    st.markdown("Business insights derived from tourism dataset")
+
+    # -------------------------------------------------
+    # KPI METRICS
+    # -------------------------------------------------
+    st.subheader("Key Performance Indicators")
+
+    total_users = df["UserId"].nunique()
+    total_attractions = df["Attraction"].nunique()
+    avg_rating = round(df["Rating"].mean(), 2)
+    total_visits = len(df)
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    col1.metric("Total Users", total_users)
+    col2.metric("Total Attractions", total_attractions)
+    col3.metric("Average Rating", avg_rating)
+    col4.metric("Total Visits", total_visits)
+
+    st.divider()
+
+    # -------------------------------------------------
+    # VISITS BY YEAR
+    # -------------------------------------------------
+    st.subheader("Visits Trend Over Years")
+
+    visits_by_year = df.groupby("VisitYear").size().reset_index(name="Visits")
+
+    fig1 = px.line(
+        visits_by_year,
+        x="VisitYear",
+        y="Visits",
+        markers=True,
+        title="Tourism Growth Trend"
+    )
+
+    st.plotly_chart(fig1, use_container_width=True)
+
+    # -------------------------------------------------
+    # VISITS BY MONTH (SEASONALITY)
+    # -------------------------------------------------
+    st.subheader("Seasonal Travel Pattern")
+
+    visits_by_month = df.groupby("VisitMonth").size().reset_index(name="Visits")
+
+    fig2 = px.bar(
+        visits_by_month,
+        x="VisitMonth",
+        y="Visits",
+        title="Monthly Travel Distribution"
+    )
+
+    st.plotly_chart(fig2, use_container_width=True)
+
+    # -------------------------------------------------
+    # VISIT MODE DISTRIBUTION
+    # -------------------------------------------------
+    st.subheader("Visit Mode Distribution")
+
+    visit_mode_counts = df["VisitMode"].value_counts().reset_index()
+    visit_mode_counts.columns = ["VisitMode", "Count"]
+
+    fig3 = px.pie(
+        visit_mode_counts,
+        names="VisitMode",
+        values="Count",
+        title="Travel Purpose Breakdown"
+    )
+
+    st.plotly_chart(fig3, use_container_width=True)
+
+    # -------------------------------------------------
+    # TOP RATED ATTRACTIONS
+    # -------------------------------------------------
+    st.subheader("Top Rated Attractions")
+
+    top_attractions = (
+        df.groupby("Attraction")["Rating"]
+        .mean()
+        .sort_values(ascending=False)
+        .head(10)
+        .reset_index()
+    )
+
+    fig4 = px.bar(
+        top_attractions,
+        x="Rating",
+        y="Attraction",
+        orientation="h",
+        title="Top 10 Highest Rated Attractions"
+    )
+
+    st.plotly_chart(fig4, use_container_width=True)
+
+    # -------------------------------------------------
+    # MOST POPULAR ATTRACTIONS
+    # -------------------------------------------------
+    st.subheader("Most Visited Attractions")
+
+    popular_attractions = (
+        df["Attraction"]
+        .value_counts()
+        .head(10)
+        .reset_index()
+    )
+    popular_attractions.columns = ["Attraction", "Visits"]
+
+    fig5 = px.bar(
+        popular_attractions,
+        x="Visits",
+        y="Attraction",
+        orientation="h",
+        title="Top 10 Most Visited Attractions"
+    )
+
+    st.plotly_chart(fig5, use_container_width=True)
+
+    # -------------------------------------------------
+    # REGION PERFORMANCE
+    # -------------------------------------------------
+    st.subheader("Regional Rating Performance")
+
+    region_rating = (
+        df.groupby("Region")["Rating"]
+        .mean()
+        .sort_values(ascending=False)
+        .reset_index()
+    )
+
+    fig6 = px.bar(
+        region_rating,
+        x="Rating",
+        y="Region",
+        orientation="h",
+        title="Average Rating by Region"
+    )
+
+    st.plotly_chart(fig6, use_container_width=True)
+
+    # -------------------------------------------------
+    # BUSINESS INSIGHTS TEXT
+    # -------------------------------------------------
+    st.divider()
+    st.subheader("Business Insights")
+
+    st.markdown(f"""
+    • Tourism demand is growing over time (see yearly trend).
+
+    • Peak travel months indicate strong seasonality — marketing campaigns
+      should focus before peak months.
+
+    • `{visit_mode_counts.iloc[0]['VisitMode']}` is the dominant travel segment.
+
+    • Top-rated attractions should be prioritized in promotional campaigns.
+
+    • Low-rated regions may need service quality improvements.
+
+    • Popular attractions can be bundled into premium packages.
     """)
 
 # =================================================
