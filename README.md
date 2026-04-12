@@ -1,4 +1,4 @@
-# 🌍 Tourism Experience Analytics System
+# Tourism Experience Analytics System
 
 ## Overview
 An end-to-end machine learning project that analyzes tourism data to:
@@ -7,15 +7,15 @@ An end-to-end machine learning project that analyzes tourism data to:
 - Recommend personalized attractions
 - Visualize tourism trends
 
-## 🚀 Live Demo (Streamlit App)
+## Live Demo (Streamlit App)
 
-🔗 **Streamlit Demo:**  
-👉 https://tourism-experience.streamlit.app/
+**Streamlit Demo:**  
+https://tourism-experience.streamlit.app/
 
     Recommendation section may not work properly due to resource restriction of streamlit cloud
 
-🔗 **Exaplanation Video**
-👉 https://drive.google.com/file/d/112vzyE5_RPhgLP7Wi0J4tVbikQ8cD1Ou/view?usp=drive_link
+**Exaplanation Video**
+https://drive.google.com/file/d/112vzyE5_RPhgLP7Wi0J4tVbikQ8cD1Ou/view?usp=drive_link
 
 ## Tech Stack
 - Python, Pandas, NumPy
