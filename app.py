@@ -80,8 +80,8 @@ if page == "Home":
     st.header("Welcome to the Travel Intelligence Dashboard")
     st.write("""
     This system predicts:
-    - 🧳 Visit Mode (Business, Family, Couples, Friends, etc.)
-    - ⭐ Attraction Rating
+    - Visit Mode (Business, Family, Couples, Friends, etc.)
+    - Attraction Rating
     """)
 
 # =================================================
