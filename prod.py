@@ -111,7 +111,7 @@ if page == "Home":
 # =================================================
 elif page == "Analytics":
 
-    # st.title("📊 Tourism Analytics Dashboard")
+    # st.title("Tourism Analytics Dashboard")
     st.markdown("Business insights derived from tourism dataset")
 
     # -------------------------------------------------
